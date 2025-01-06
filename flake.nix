@@ -12,17 +12,24 @@
 
   outputs = { self, nixpkgs-stable, zig, ... }:
     let
-      systems = builtins.attrNames zig.packages;
-    in builtins.foldl' nixpkgs-stable.lib.recursiveUpdate {} (map (system: let
-      pkgs-stable = nixpkgs-stable.legacyPackages.${system};
-    in {
-      devShell.${system} = pkgs-stable.callPackage ./nix/devShell.nix {
-        zig = zig.packages.${system}."0.13.0";
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
+      pkgsFor = system: import nixpkgs-stable {
+        system = system;
       };
+    in {
+      packages = builtins.listToAttrs (map (system: {
+        name = system;
+        value = (pkgsFor system).callPackage ./nix/package.nix {
+          zig = zig.packages.${system}."0.13.0";
+        };
+      }) systems);
 
-      packages.${system} = pkgs-stable.callPackage ./nix/package.nix {};
-
-      formatter.${system} = pkgs-stable.alejandra;
-    }) systems);
+      devShells = builtins.listToAttrs (map (system: {
+        name = system;
+        value = (pkgsFor system).mkShell {
+          buildInputs = [ zig.packages.${system}."0.13.0" ];
+        };
+      }) systems);
+    };
 }
 

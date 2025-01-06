@@ -1,7 +1,8 @@
-{ stdenv, zig }:
+{ stdenv, zig, ... }:
+
 stdenv.mkDerivation {
   name = "phantomsync";
-  src = ./src;
+  src = ./.;
 
   buildInputs = [ zig ];
 
@@ -15,9 +16,9 @@ stdenv.mkDerivation {
   '';
 
   meta = with stdenv.lib; {
-    description = "PhantomSync: Terminal Screenshot Tool";
+    description = "PhantomSync: A platform for managing terminal activity.";
     license = licenses.mit;
-    maintainers = [ "your-github-handle" ];
+    maintainers = [ "RateDaveR" ];
   };
 }
 
