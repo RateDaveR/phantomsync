@@ -1,0 +1,21 @@
+# Zig build artifacts
+zig-cache/
+.zig-cache/
+zig-out/
+
+# Nix build artifacts
+result/
+*.drv
+
+# System files
+.DS_Store
+
+# Temporary files
+*~
+.*.swp
+.swp
+*.log
+
+# IDE and tooling configurations
+.direnv/
+
