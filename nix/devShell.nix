@@ -7,7 +7,7 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    echo "👻 Welcome to PhantomSync's development shell! 🌐"
+    echo "👻 bingbong 🌐"
   '';
 }
 

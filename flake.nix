@@ -1,35 +1,39 @@
 {
-  description = "👻🌐";
+  description = "👻🌐 PhantomSync";
 
   inputs = {
-    nixpkgs-stable.url = "github:nixos/nixpkgs/release-24.11";
-
-    zig = {
-      url = "github:mitchellh/zig-overlay";
-      inputs.nixpkgs.follows = "nixpkgs-stable";
-    };
+    nixpkgs.url = "github:nixos/nixpkgs/release-24.11";
+    zig-overlay.url = "github:mitchellh/zig-overlay";
   };
 
-  outputs = { self, nixpkgs-stable, zig, ... }:
+  outputs = { self, nixpkgs, zig-overlay }:
     let
-      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
-      pkgsFor = system: import nixpkgs-stable {
-        system = system;
-      };
-    in {
-      packages = builtins.listToAttrs (map (system: {
-        name = system;
-        value = (pkgsFor system).callPackage ./nix/package.nix {
-          zig = zig.packages.${system}."0.13.0";
-        };
-      }) systems);
+      # Helper function to create package for each system
+      forAllSystems = nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+        "riscv64-linux"
+      ];
 
-      devShells = builtins.listToAttrs (map (system: {
-        name = system;
-        value = (pkgsFor system).mkShell {
-          buildInputs = [ zig.packages.${system}."0.13.0" ];
+      # Package builder for each system
+      packageFor = system: 
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in pkgs.callPackage ./nix/package.nix {
+          zig = zig-overlay.packages.${system}."0.13.0";
         };
-      }) systems);
+    in {
+      # Packages for each system
+      packages = forAllSystems (system: {
+        default = packageFor system;
+        phantomsync = packageFor system;  # Named package
+      });
+
+      # Development shell for each system
+      devShells = forAllSystems (system: {
+        default = nixpkgs.legacyPackages.${system}.callPackage ./nix/devShell.nix {
+          zig = zig-overlay.packages.${system}."0.13.0";
+        };
+      });
     };
 }
-
